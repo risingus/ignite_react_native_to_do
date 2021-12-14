@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Alert, StyleSheet, View } from 'react-native';
 
 import { Header } from '../components/Header';
 import { Task, TasksList } from '../components/TasksList';
@@ -13,6 +13,12 @@ export function Home() {
     if (newTaskTitle === null) return
     if (newTaskTitle === '') return
     if (newTaskTitle === undefined) return
+    const isTaskRepeted = tasks.find((task) => task.title === newTaskTitle);
+
+    if (isTaskRepeted) {
+      Alert.alert('Task já cadastrada', 'Você não pode cadastrar uma task com o mesmo nome')
+      return
+    }
     const newTask = {
       id: new Date().getTime(),
       title: newTaskTitle,
@@ -35,9 +41,37 @@ export function Home() {
   function handleRemoveTask(id: number) {
     const taskToRemove = tasks.find((task) => task.id === id)
     if (!taskToRemove) return
+
+
+    Alert.alert('Remover item', 'Tem certeza que você deseja remover esse item?', 
+      [
+        {
+          text: "Não"
+        },
+        {
+          text: "Sim",
+          onPress: () => removeTask(id)
+        },
+
+      ]
+    )
+  
+  }
+
+  function removeTask (id: number) {
     const newTaskList = tasks.filter((task) => task.id !== id)
 
     setTasks(newTaskList)
+  }
+
+  function handleEditTask(taskId: number, taskNewTitle: string) {
+    const selectedTask = tasks.find((task) => task.id === taskId)
+    if (!selectedTask) return
+    const clonedTasks = JSON.parse(JSON.stringify(tasks));
+    const selectedTaskClone = clonedTasks.find((task: Task) => task.id === taskId)
+    const indexTask = clonedTasks.indexOf(selectedTaskClone)
+    clonedTasks[indexTask].title = taskNewTitle
+    setTasks(clonedTasks)
   }
 
   return (
@@ -49,7 +83,8 @@ export function Home() {
       <TasksList 
         tasks={tasks} 
         toggleTaskDone={handleToggleTaskDone}
-        removeTask={handleRemoveTask} 
+        removeTask={handleRemoveTask}
+        handleEditTask={handleEditTask}
       />
     </View>
   )
